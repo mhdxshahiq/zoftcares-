@@ -7,8 +7,21 @@ mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
 mp_drawing = mp.solutions.drawing_utils
 
+def angle_between(p1, p2, p3):
+    a = np.array(p1)
+    b = np.array(p2)
+    c = np.array(p3)
+    ba = a - b
+    bc = c - b
+    cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
+    angle = np.arccos(np.clip(cosine_angle, -1.0, 1.0))
+    return np.degrees(angle)
+
 # Load video file instead of webcam
-cap = cv2.VideoCapture('video/VID-20250519-WA0038.mp4')  # Change to your filename
+cap = cv2.VideoCapture('video/VID-20250519-WA0039.mp4')  # Change to your filename
+
+prev_head_y = None  # to store the head's y-position from the previous frame
+
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -54,7 +67,7 @@ while cap.isOpened():
             angle = np.arccos(np.clip(cosine_angle, -1.0, 1.0))
             return np.degrees(angle)
 
-        # Calculate head-to-stomach vertical distance
+       # Calculate head-to-stomach vertical distance
         head_y = head[1]
         stomach_y = stomach[1]
         head_to_hip_diff = stomach_y - head_y
@@ -65,9 +78,10 @@ while cap.isOpened():
         # Body angle (head → stomach → knees)
         body_angle = angle_between(head, stomach, avg_knee)
 
-        # Fall condition: head is near hip, and body angle is collapsed
+        # Fall condition
         if head_to_hip_diff < 50 or body_angle < 100:
             cv2.putText(frame, "FALL DETECTED!", (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+
         
 
         # Draw keypoints (no labels)
